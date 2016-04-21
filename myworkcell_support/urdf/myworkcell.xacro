@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<robot name="myworkcell" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find ur_description)/urdf/ur5.urdf.xacro"/>
+  
+  <!-- property list -->
+  <xacro:property name="arm_prefix" value=""/>
+
+  <link name="world"/>
+
+  <!-- instantiating arm  --> 
+  <xacro:ur5_robot prefix="${arm_prefix}" joint_limited="true"/>
+
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="${arm_prefix}base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
