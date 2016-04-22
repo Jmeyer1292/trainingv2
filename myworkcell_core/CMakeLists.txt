@@ -10,6 +10,11 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   tf
   moveit_ros_planning_interface
+
+  descartes_planner
+  descartes_moveit
+  descartes_trajectory
+  descartes_utilities
   # ar_pose
 )
 
@@ -57,6 +62,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
   FILES
   LocalizePart.srv
+  PlanCartesianPath.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -71,6 +77,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs
   geometry_msgs
+  trajectory_msgs
 )
 
 ################################################
@@ -133,6 +140,7 @@ include_directories(
 ## Declare a C++ executable
 add_executable(vision_node src/vision_node.cpp)
 add_executable(myworkcell_node src/myworkcell_node.cpp)
+add_executable(descartes_node src/descartes_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -144,9 +152,15 @@ add_dependencies(myworkcell_node
     ${${PROJECT_NAME}_EXPORTED_TARGETS} 
     ${catkin_EXPORTED_TARGETS})
 
+add_dependencies(descartes_node 
+    ${${PROJECT_NAME}_EXPORTED_TARGETS} 
+    ${catkin_EXPORTED_TARGETS})
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(vision_node ${catkin_LIBRARIES})
 target_link_libraries(myworkcell_node ${catkin_LIBRARIES})
+target_link_libraries(descartes_node ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##
