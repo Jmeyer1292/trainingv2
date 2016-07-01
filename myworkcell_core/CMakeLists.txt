@@ -141,6 +141,7 @@ include_directories(
 add_executable(vision_node src/vision_node.cpp)
 add_executable(myworkcell_node src/myworkcell_node.cpp)
 add_executable(descartes_node src/descartes_node.cpp)
+add_executable(fake_ar_publisher_node src/fake_ar_publisher.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -156,10 +157,16 @@ add_dependencies(descartes_node
     ${${PROJECT_NAME}_EXPORTED_TARGETS} 
     ${catkin_EXPORTED_TARGETS})
 
+add_dependencies(fake_ar_publisher_node
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS})
+
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(vision_node ${catkin_LIBRARIES})
 target_link_libraries(myworkcell_node ${catkin_LIBRARIES})
 target_link_libraries(descartes_node ${catkin_LIBRARIES})
+target_link_libraries(fake_ar_publisher_node ${catkin_LIBRARIES})
 
 
 #############

@@ -14,6 +14,7 @@ public:
   ScanNPlan(ros::NodeHandle& nh)
     : group_("manipulator")
   {
+    group_.setPlannerId("RRTConnectkConfigDefault");
     // Read parameters
     // Make service clients
     vision_client_ = nh.serviceClient<myworkcell_core::LocalizePart>("localize_part");
@@ -42,33 +43,35 @@ public:
     ROS_INFO("Starting");
     // Localize the part
     myworkcell_core::LocalizePart srv;
-    // if (!vision_client_.call(srv))
-    // {
-    //   ROS_ERROR("Could not localize part");
-    //   return;
-    // }
+    if (!vision_client_.call(srv))
+    {
+      ROS_ERROR("Could not localize part");
+      return;
+    }
     ROS_INFO_STREAM("part localized: " << srv.response);
 
     srv.response.pose = transformPose(srv.response.pose);
-    srv.response.pose.position.x = 0.3;
-    srv.response.pose.position.z = 0.5;
-    srv.response.pose.orientation.w = 1;
 
     // Plan for robot to move to part    
-    // group_.setPoseTarget(srv.response.pose);
-    // group_.move();
+    group_.setPoseTarget(srv.response.pose);
+    group_.move();
+
+    ROS_INFO("Done moving, planning cart path");
 
     // Plan cartesian path
-    myworkcell_core::PlanCartesianPath cartesian_srv;
-    cartesian_srv.request.pose = srv.response.pose;
-    if (!cartesian_client_.call(cartesian_srv))
-    {
-      ROS_ERROR("Could not plan for path");
-      return;
-    }
+     myworkcell_core::PlanCartesianPath cartesian_srv;
+     cartesian_srv.request.pose = srv.response.pose;
+     if (!cartesian_client_.call(cartesian_srv))
+     {
+       ROS_ERROR("Could not plan for path");
+       return;
+     }
+
+     ROS_INFO("Got cart path, executing");
     
-    // Execute path
-    pub_.publish(cartesian_srv.response.trajectory);
+//     Execute path
+     pub_.publish(cartesian_srv.response.trajectory);
+     ROS_INFO("Done");
   }
 
 private:
@@ -86,6 +89,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "myworkcell_node");
   ros::NodeHandle nh;
+  ros::AsyncSpinner async_spinner (1);
 
   // Hello World
   ROS_INFO("Hello, World from a ROS Node");
@@ -94,6 +98,7 @@ int main(int argc, char** argv)
 
   ros::Duration(.5).sleep();
 
+  async_spinner.start();
   app.start();
 
   ros::spin();

@@ -3,6 +3,7 @@
 
 #include <descartes_moveit/moveit_state_adapter.h>
 #include <descartes_planner/dense_planner.h>
+#include <descartes_planner/sparse_planner.h>
 #include <descartes_trajectory/axial_symmetric_pt.h>
 #include <descartes_utilities/ros_conversions.h>
 #include <eigen_conversions/eigen_msg.h>
@@ -13,14 +14,23 @@ public:
   CartesianPlanner(ros::NodeHandle& nh)
   {
     model_ = boost::make_shared<descartes_moveit::MoveitStateAdapter>();
+
     // first init descartes
     const std::string robot_description = "robot_description";
     const std::string group_name = "manipulator";
     const std::string world_frame = "base_link"; // Frame in which tool poses are expressed
     const std::string tcp_frame = "tool0";
 
-    model_->initialize(robot_description, group_name, world_frame, tcp_frame);
-    planner_.initialize(model_);
+    if (!model_->initialize(robot_description, group_name, world_frame, tcp_frame))
+    {
+      ROS_WARN("model didn't init");
+      throw std::runtime_error("model init()");
+    }
+
+    if (!planner_.initialize(model_))
+    {
+      ROS_WARN("Planner didn't init");
+    }
 
     // init services
     server_ = nh.advertiseService("plan_path", &CartesianPlanner::planPath, this);
@@ -34,12 +44,13 @@ public:
     EigenSTL::vector_Affine3d tool_poses = makeToolPoses();
     // Step 2: Translate that path by the input reference pose
     std::vector<descartes_core::TrajectoryPtPtr> path = makeDescartesTrajectorty(req.pose, tool_poses);
+    ROS_INFO("plan path");
     // Step 3: Plan with descartes
     if (!planner_.planPath(path))
     {
       return false;
     }
-
+    ROS_INFO("Get path");
     std::vector<descartes_core::TrajectoryPtPtr> result;
     if (!planner_.getPath(result))
     {
@@ -91,7 +102,7 @@ public:
   {
     using namespace descartes_core;
     using namespace descartes_trajectory;
-    return TrajectoryPtPtr( new AxialSymmetricPt(pose, M_PI/8.0, AxialSymmetricPt::Z_AXIS) );
+    return TrajectoryPtPtr( new AxialSymmetricPt(pose, M_PI/2.0, AxialSymmetricPt::Z_AXIS) );
   }
 
 
